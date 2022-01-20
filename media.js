@@ -124,7 +124,7 @@ window.fbControls.push(function media(controlClass) {
 
             switch(this.subtype) {
                 case 'image':
-                    let caption = this.markup('figcaption', attrs.label, {});
+                    let caption = this.markup('figcaption', this.label, {});
                     let img = this.markup('img', null, attrs);
                     let figure = this.markup('figure', [img, caption,], attrs);
                     return {
