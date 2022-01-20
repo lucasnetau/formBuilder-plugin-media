@@ -28,6 +28,11 @@ typeUserDisabledAttrs: {
 }
 ```
 
-##Notes on File Upload support
+## Notes on File Upload support
 * Media uploads are converted to DataURIs in the browser and stored in the **src** field attribute. It is recommended that when processing the formBuilder template on the backend that the DataURI is uploaded (for example to a S3 bucket) and the **src** attribute is modified to point to the public URL.
 * For large files it is recommended to manually upload media and link to the public URL instead of using the file upload support
+
+## Images
+![](docs/edit_panel.png)
+
+![](docs/preview.png)
