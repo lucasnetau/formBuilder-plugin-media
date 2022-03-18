@@ -27,7 +27,7 @@ window.fbControls.push(function media(controlClass) {
                     //Async read of the uploaded file and convert to a DateURI. Detect mimetype and adjust mimetype attribute and control Subtype
                     reader.addEventListener("load", function () {
                         const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
-                        const srcElement = input.closest('.frmb.stage-wrap').find('.fld-src');
+                        const srcElement = input.parent().parent().parent().find('.fld-src');
                         const dataUri = this.result;
                         const mediatype = dataUri.match(regexp);
                         if (null !== mediatype) {
