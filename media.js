@@ -27,11 +27,12 @@ window.fbControls.push(function media(controlClass) {
                     //Async read of the uploaded file and convert to a DateURI. Detect mimetype and adjust mimetype attribute and control Subtype
                     reader.addEventListener("load", function () {
                         const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
-                        const srcElement = input.closest('.frmb.stage-wrap').find('.fld-src');
+                        const elementContainer = input.closest('.form-elements'); //The container for an element's configuration fields
+                        const srcElement = elementContainer.find('.fld-src');
                         const dataUri = this.result;
                         const mediatype = dataUri.match(regexp);
                         if (null !== mediatype) {
-                            input.closest('.frmb.stage-wrap').find('.fld-mimetype').val(mediatype[1]);
+                            elementContainer.find('.fld-mimetype').val(mediatype[1]);
 
                             let pluginSubtype;
                             if (mediatype[1].startsWith('image/')) {
@@ -41,7 +42,7 @@ window.fbControls.push(function media(controlClass) {
                             } else {
                                 pluginSubtype = 'audio';
                             }
-                            input.closest('.frmb.stage-wrap').find('.fld-subtype').val(pluginSubtype);
+                            elementContainer.find('.fld-subtype').val(pluginSubtype);
                         }
                         srcElement.val(dataUri).trigger('change');
                         input.val("");
