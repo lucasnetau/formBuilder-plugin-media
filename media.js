@@ -24,7 +24,7 @@ window.fbControls.push(function media(controlClass) {
                     const input = $(this);
                     let reader = new FileReader();
 
-                    //Async read of the uploaded file and convert to a DateURI. Detect mimetype and adjust mimetype attribute and control Subtype
+                    //Async read of the uploaded file and convert to a DataURI. Detect mimetype and adjust mimetype attribute and control Subtype
                     reader.addEventListener("load", function () {
                         const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
                         const elementContainer = input.closest('.form-elements'); //The container for an element's configuration fields
