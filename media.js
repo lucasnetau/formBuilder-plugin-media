@@ -8,6 +8,17 @@
  * @license MIT
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
+ *
+ * To disable the default handler for files (convert to dataURI) configure this via controlConfig
+ * ```
+ * var renderOpts = {
+ *    controlConfig: {
+ *      'media.image': {
+ *         default_change_handler: false
+ *       }
+ *       //Need to repeat config for media.video and media.image since Formbuilder does not load controlControl for parent type
+ *    }
+ * };
  */
 if (!window.fbControls) { window.fbControls = []; }
 window.fbControls.push(function media(controlClass) {
@@ -17,39 +28,41 @@ window.fbControls.push(function media(controlClass) {
          * Load embedded Javascript
          */
         configure() {
-            const marker = 'controlMediaEmbedded';
-            const cache = window.fbLoaded.js; //Reuse the FormBuilder cache to ensure we only load the media control JS once
-            if (! cache.includes(marker)) {
-                $(document.body).on('change', '.form-builder .frm-holder .fld-media-file-upload', function() {
-                    const input = $(this);
-                    let reader = new FileReader();
+            if (this.classConfig.default_change_handler ?? true) {
+                const marker = 'controlMediaEmbedded';
+                const cache = window.fbLoaded.js; //Reuse the FormBuilder cache to ensure we only load the media control JS once
+                if (!cache.includes(marker)) {
+                    $(document.body).on('change', '.form-builder .frm-holder .fld-media-file-upload', function () {
+                        const input = $(this);
+                        let reader = new FileReader();
 
-                    //Async read of the uploaded file and convert to a DataURI. Detect mimetype and adjust mimetype attribute and control Subtype
-                    reader.addEventListener("load", function () {
-                        const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
-                        const elementContainer = input.closest('.form-elements'); //The container for an element's configuration fields
-                        const srcElement = elementContainer.find('.fld-src');
-                        const dataUri = this.result;
-                        const mediatype = dataUri.match(regexp);
-                        if (null !== mediatype) {
-                            elementContainer.find('.fld-mimetype').val(mediatype[1]);
+                        //Async read of the uploaded file and convert to a DataURI. Detect mimetype and adjust mimetype attribute and control Subtype
+                        reader.addEventListener("load", function () {
+                            const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
+                            const elementContainer = input.closest('.form-elements'); //The container for an element's configuration fields
+                            const srcElement = elementContainer.find('.fld-src');
+                            const dataUri = this.result;
+                            const mediatype = dataUri.match(regexp);
+                            if (null !== mediatype) {
+                                elementContainer.find('.fld-mimetype').val(mediatype[1]);
 
-                            let pluginSubtype;
-                            if (mediatype[1].startsWith('image/')) {
-                                pluginSubtype = 'image';
-                            } else if (mediatype[1].startsWith('video/')) {
-                                pluginSubtype = 'video';
-                            } else {
-                                pluginSubtype = 'audio';
+                                let pluginSubtype;
+                                if (mediatype[1].startsWith('image/')) {
+                                    pluginSubtype = 'image';
+                                } else if (mediatype[1].startsWith('video/')) {
+                                    pluginSubtype = 'video';
+                                } else {
+                                    pluginSubtype = 'audio';
+                                }
+                                elementContainer.find('.fld-subtype').val(pluginSubtype);
                             }
-                            elementContainer.find('.fld-subtype').val(pluginSubtype);
-                        }
-                        srcElement.val(dataUri).trigger('change');
-                        input.val("");
+                            srcElement.val(dataUri).trigger('change');
+                            input.val("");
+                        });
+                        reader.readAsDataURL(input[0].files[0]);
                     });
-                    reader.readAsDataURL(input[0].files[0]);
-                });
-                cache.push(marker);
+                    cache.push(marker);
+                }
             }
         }
 
