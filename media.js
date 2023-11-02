@@ -10,11 +10,14 @@
  * file that was distributed with this source code.
  *
  * To disable the default handler for files (convert to dataURI) configure this via controlConfig
+ *
+ * A custom handler can be
  * ```
  * var renderOpts = {
  *    controlConfig: {
  *      'media.image': {
- *         default_change_handler: false
+ *         default_change_handler: false,
+ *         change_handler: (event) => {}
  *       }
  *       //Need to repeat config for media.video and media.image since Formbuilder does not load controlControl for parent type
  *    }
@@ -28,42 +31,51 @@ window.fbControls.push(function media(controlClass) {
          * Load embedded Javascript
          */
         configure() {
-            if (this.classConfig.default_change_handler ?? true) {
+            let changeHandler = this.defaultChangeHandler;
+            if ((this.classConfig.default_change_handler ?? true) === false) {
+                changeHandler = undefined;
+            }
+            if (typeof this.classConfig.change_handler === 'function') {
+                changeHandler = this.classConfig.change_handler
+            }
+            if (changeHandler) {
                 const marker = 'controlMediaEmbedded';
                 const cache = window.fbLoaded.js; //Reuse the FormBuilder cache to ensure we only load the media control JS once
                 if (!cache.includes(marker)) {
-                    $(document.body).on('change', '.form-builder .frm-holder .fld-media-file-upload', function () {
-                        const input = $(this);
-                        let reader = new FileReader();
-
-                        //Async read of the uploaded file and convert to a DataURI. Detect mimetype and adjust mimetype attribute and control Subtype
-                        reader.addEventListener("load", function () {
-                            const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
-                            const elementContainer = input.closest('.form-elements'); //The container for an element's configuration fields
-                            const srcElement = elementContainer.find('.fld-src');
-                            const dataUri = this.result;
-                            const mediatype = dataUri.match(regexp);
-                            if (null !== mediatype) {
-                                elementContainer.find('.fld-mimetype').val(mediatype[1]);
-
-                                let pluginSubtype;
-                                if (mediatype[1].startsWith('image/')) {
-                                    pluginSubtype = 'image';
-                                } else if (mediatype[1].startsWith('video/')) {
-                                    pluginSubtype = 'video';
-                                } else {
-                                    pluginSubtype = 'audio';
-                                }
-                                elementContainer.find('.fld-subtype').val(pluginSubtype);
-                            }
-                            srcElement.val(dataUri).trigger('change');
-                            input.val("");
-                        });
-                        reader.readAsDataURL(input[0].files[0]);
-                    });
+                    $(document.body).on('change', '.form-builder .frm-holder .fld-media-file-upload', changeHandler)
                     cache.push(marker);
                 }
             }
+        }
+
+        defaultChangeHandler(event) {
+            const input = $(event.target);
+            let reader = new FileReader();
+
+            //Async read of the uploaded file and convert to a DataURI. Detect mimetype and adjust mimetype attribute and control Subtype
+            reader.addEventListener("load", function () {
+                const regexp = /^data:((?:\w+\/(?:(?!;).)+)?)/;
+                const elementContainer = input.closest('.form-elements'); //The container for an element's configuration fields
+                const srcElement = elementContainer.find('.fld-src');
+                const dataUri = this.result;
+                const mediatype = dataUri.match(regexp);
+                if (null !== mediatype) {
+                    elementContainer.find('.fld-mimetype').val(mediatype[1]);
+
+                    let pluginSubtype;
+                    if (mediatype[1].startsWith('image/')) {
+                        pluginSubtype = 'image';
+                    } else if (mediatype[1].startsWith('video/')) {
+                        pluginSubtype = 'video';
+                    } else {
+                        pluginSubtype = 'audio';
+                    }
+                    elementContainer.find('.fld-subtype').val(pluginSubtype);
+                }
+                srcElement.val(dataUri).trigger('change');
+                input.val("");
+            });
+            reader.readAsDataURL(input[0].files[0]);
         }
 
         /**
@@ -140,9 +152,9 @@ window.fbControls.push(function media(controlClass) {
                 case 'image':
                     let caption = this.markup('figcaption', this.label, {});
                     let img = this.markup('img', null, attrs);
-                    let figure = this.markup('figure', [img, caption,], attrs);
+                    this.field = this.markup('figure', [img, caption,], attrs);
                     return {
-                        field: figure,
+                        field: this.field,
                         layout: 'noLabel',
                     };
 
@@ -150,12 +162,14 @@ window.fbControls.push(function media(controlClass) {
                     attrs.controls = true;
                     attrs.controlsList = "nodownload";
                     let videoSource = this.markup('source', null, {src: attrs.src, type: attrs.mimetype,});
-                    return this.markup('video', [videoSource, '<p>Your browser does not support HTML5 video</p>',], attrs);
+                    this.field = this.markup('video', [videoSource, '<p>Your browser does not support HTML5 video</p>',], attrs);
+                    return this.field;
 
                 case 'audio':
                     attrs.controls = true;
                     let audioSource = this.markup('source', null, {src: attrs.src, type: attrs.mimetype,});
-                    return this.markup('audio', [audioSource, '<p>Your browser does not support HTML5 audio</p>',], attrs);
+                    this.field = this.markup('audio', [audioSource, '<p>Your browser does not support HTML5 audio</p>',], attrs);
+                    return this.field;
             }
         }
 
