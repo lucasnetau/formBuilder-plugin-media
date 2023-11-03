@@ -31,19 +31,23 @@ window.fbControls.push(function media(controlClass) {
          * Load embedded Javascript
          */
         configure() {
-            let changeHandler = this.defaultChangeHandler;
-            if ((this.classConfig.default_change_handler ?? true) === false) {
-                changeHandler = undefined;
-            }
-            if (typeof this.classConfig.change_handler === 'function') {
-                changeHandler = this.classConfig.change_handler
-            }
-            if (changeHandler) {
-                const marker = 'controlMediaEmbedded';
-                const cache = window.fbLoaded.js; //Reuse the FormBuilder cache to ensure we only load the media control JS once
-                if (!cache.includes(marker)) {
-                    $(document.body).on('change', '.form-builder .frm-holder .fld-media-file-upload', changeHandler)
-                    cache.push(marker);
+            if (this.preview) {
+                let changeHandler = this.defaultChangeHandler;
+                if ((this.classConfig.default_change_handler ?? true) === false) {
+                    changeHandler = undefined;
+                }
+                if (typeof this.classConfig.change_handler === 'function') {
+                    changeHandler = this.classConfig.change_handler
+                }
+                if (changeHandler) {
+                    const fieldId = this.id.replace(/-preview$/, "")
+                    const marker = `controlMediaEmbedded-${fieldId}`;
+                    const cache = window.fbLoaded.js; //Reuse the FormBuilder cache to ensure we only load the media control JS once
+                    if (!cache.includes(marker)) {
+                        const input = $(`input[value="${fieldId}"]`).closest('.form-elements').find('input[name="media-file-upload"]');
+                        $(input).on('change', changeHandler)
+                        cache.push(marker);
+                    }
                 }
             }
         }
